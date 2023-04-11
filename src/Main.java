@@ -1,13 +1,15 @@
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import  java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws FileNotFoundException {
-        int[] UpperLower = new int[2];
+        Map<Character, Integer> LetterDict = new HashMap<>();
         String path;
         path = OpenFileInput();
-        UpperLower = Counter(path);
-        OpenFileOutput(UpperLower);
+        LetterDict = Counter(path, LetterDict);
+        OpenFileOutput(LetterDict);
     }
 
     public static String OpenFileInput() {
@@ -26,25 +28,23 @@ public class Main {
         return pathin;
     }
 
-    public static int[] Counter(String path) throws FileNotFoundException {
-        int[] UpperLower = new int[2];
+    public static Map<Character, Integer> Counter(String path, Map<Character, Integer> LetterDict) throws FileNotFoundException {
         try (FileReader reader = new FileReader(path)) {
             int c;
             while ((c = reader.read()) != -1) {
-                if (Character.UnicodeBlock.of(c).equals(Character.UnicodeBlock.BASIC_LATIN)) {
-                    if (Character.isUpperCase(c))
-                        UpperLower[0]++;
-                    else if (Character.isLowerCase(c))
-                        UpperLower[1]++;
+                if (Character.isLetter(c) && Character.UnicodeBlock.of(c).equals(Character.UnicodeBlock.BASIC_LATIN)) {
+                    char l = (char)c;
+                    LetterDict.putIfAbsent(l,0);
+                    LetterDict.put(l, LetterDict.get(l)+1);
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return UpperLower;
+        return LetterDict;
     }
 
-    public static void OpenFileOutput(int[] UpperLower){
+    public static void OpenFileOutput(Map<Character, Integer> LetterDict){
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Print name of output file:");
@@ -52,8 +52,9 @@ public class Main {
 
         try (FileWriter writer = new FileWriter(pathout, false))
         {
-            writer.append("Capital letters: " + UpperLower[0] + "\n");
-            writer.append("Lowercase letters: " + UpperLower[1] + "\n");
+            for (Map.Entry<Character, Integer> item: LetterDict.entrySet()) {
+                writer.append(String.valueOf(item.getKey())).append("-").append(String.valueOf(item.getValue())).append("\n");
+            }
             writer.flush();
         }
         catch(IOException ex){
